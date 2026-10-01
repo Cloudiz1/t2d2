@@ -421,6 +421,15 @@ deleteAllBtn.addEventListener('click', () => {
 // --- hotkeys --------------------------------------------------------------
 
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const ae = document.activeElement;
+    if (ae && isTypingTarget(ae)) {
+      e.preventDefault();
+      ae.blur();
+      return;
+    }
+  }
+
   if (isTypingTarget(e.target)) return;
 
   const cmd = e.metaKey || e.ctrlKey;
