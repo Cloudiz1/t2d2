@@ -1,0 +1,316 @@
+:root {
+  --bg: #fafafa;
+  --fg: #1f2328;
+  --muted: #6e7681;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --border: #e5e7eb;
+  --hover: #f3f4f6;
+  --danger: #dc2626;
+  --completed: #9ca3af;
+  --focus: rgba(37, 99, 235, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-fg: #0d1117;
+    --border: #21262d;
+    --hover: #161b22;
+    --danger: #f85149;
+    --completed: #484f58;
+    --focus: rgba(88, 166, 255, 0.45);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: 520px;
+  margin: 60px auto 80px;
+  padding: 0 20px;
+}
+
+h1 {
+  font-size: 1.625rem;
+  font-weight: 600;
+  margin: 0 0 24px;
+  letter-spacing: -0.02em;
+}
+
+/* --- new-task form --- */
+
+#new-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+#new-title {
+  flex: 1;
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+#new-title:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+#add-btn {
+  padding: 10px 18px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+}
+#add-btn:hover { filter: brightness(1.08); }
+
+#add-note-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 2px 0;
+}
+#add-note-btn:hover { color: var(--accent); }
+
+#new-description {
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font: inherit;
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+#new-description:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+#new-description[hidden] { display: none; }
+
+/* --- task list --- */
+
+#task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  transition: background-color 0.08s;
+}
+.task:last-child { border-bottom: none; }
+.task.dragging { opacity: 0.4; }
+.task.drop-before::before,
+.task.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+.task.drop-before::before { top: -1px; }
+.task.drop-after::after { bottom: -1px; }
+.task.hovered,
+.task.selected { background: var(--hover); }
+
+.checkbox {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--muted);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 2px;
+  position: relative;
+  transition: border-color 0.1s, background-color 0.1s;
+}
+.checkbox:hover { border-color: var(--accent); }
+.task.completed .checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.task.completed .checkbox::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--accent-fg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  cursor: text;
+  padding: 2px 6px;
+  margin: -2px -2px;
+  border-radius: 4px;
+  outline: none;
+  word-break: break-word;
+}
+.title:hover { background: var(--hover); }
+.title[contenteditable="true"] {
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.task.completed .title {
+  text-decoration: line-through;
+  color: var(--completed);
+}
+
+.description-preview {
+  display: block;
+  margin: 4px 0 0;
+  padding: 2px 6px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-style: italic;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.description-preview::before {
+  content: 'note · ';
+  font-style: normal;
+  opacity: 0.7;
+}
+.description-preview:hover { background: var(--hover); }
+
+.description-edit {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+.description-edit:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+.delete {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.1s, background-color 0.1s, color 0.1s;
+}
+.task.hovered .delete,
+.task.selected .delete,
+.delete:focus-visible { opacity: 1; }
+.delete:hover {
+  background: var(--danger);
+  color: white;
+}
+
+/* --- footer --- */
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+#delete-all-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  transition: border-color 0.1s, color 0.1s, background-color 0.1s;
+}
+#delete-all-btn:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+#delete-all-btn.armed {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+}
+#delete-all-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#count { font-variant-numeric: tabular-nums; }

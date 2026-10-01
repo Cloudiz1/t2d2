@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tasks</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>Tasks</h1>
+
+    <form id="new-task-form" autocomplete="off">
+      <div class="input-row">
+        <input
+          id="new-title"
+          type="text"
+          name="title"
+          placeholder="What needs doing?"
+          aria-label="New task title"
+        />
+        <button type="submit" id="add-btn">Add</button>
+      </div>
+      <button type="button" id="add-note-btn">+ note</button>
+      <textarea
+        id="new-description"
+        name="description"
+        placeholder="Optional details"
+        rows="2"
+        aria-label="New task description"
+      ></textarea>
+    </form>
+
+    <ul id="task-list" aria-live="polite"></ul>
+
+    <footer>
+      <span id="count">0 remaining</span>
+      <button type="button" id="delete-all-btn">Delete all</button>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
