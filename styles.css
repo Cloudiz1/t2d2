@@ -1,29 +1,13 @@
 :root {
-  --bg: #fafafa;
-  --fg: #1f2328;
-  --muted: #6e7681;
-  --accent: #2563eb;
-  --accent-fg: #ffffff;
-  --border: #e5e7eb;
-  --hover: #f3f4f6;
-  --danger: #dc2626;
-  --completed: #9ca3af;
-  --focus: rgba(37, 99, 235, 0.35);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1117;
-    --fg: #e6edf3;
-    --muted: #8b949e;
-    --accent: #58a6ff;
-    --accent-fg: #0d1117;
-    --border: #21262d;
-    --hover: #161b22;
-    --danger: #f85149;
-    --completed: #484f58;
-    --focus: rgba(88, 166, 255, 0.45);
-  }
+  --bg: #faf6ee;
+  --fg: #2b2620;
+  --muted: #8a7f74;
+  --accent: #b8541f;
+  --accent-fg: #faf6ee;
+  --border: #e6dcc8;
+  --hover: #f1e9d6;
+  --completed: #b5a896;
+  --focus: rgba(184, 84, 31, 0.25);
 }
 
 * { box-sizing: border-box; }
@@ -46,10 +30,17 @@ main {
   padding: 0 20px;
 }
 
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 24px;
+}
+
 h1 {
   font-size: 1.625rem;
   font-weight: 600;
-  margin: 0 0 24px;
+  margin: 0;
   letter-spacing: -0.02em;
 }
 
@@ -271,22 +262,11 @@ h1 {
 .task.selected .delete,
 .delete:focus-visible { opacity: 1; }
 .delete:hover {
-  background: var(--danger);
-  color: white;
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
-/* --- footer --- */
-
-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 0.875rem;
-}
+/* --- delete all (header) --- */
 
 #delete-all-btn {
   padding: 6px 12px;
@@ -296,21 +276,19 @@ footer {
   border-radius: 4px;
   cursor: pointer;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   transition: border-color 0.1s, color 0.1s, background-color 0.1s;
 }
 #delete-all-btn:hover:not(:disabled) {
-  border-color: var(--danger);
-  color: var(--danger);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 #delete-all-btn.armed {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: white;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
 }
 #delete-all-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-#count { font-variant-numeric: tabular-nums; }

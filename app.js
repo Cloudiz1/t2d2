@@ -25,7 +25,6 @@ const formEl = document.getElementById('new-task-form');
 const inputTitle = document.getElementById('new-title');
 const inputDesc = document.getElementById('new-description');
 const btnAddNote = document.getElementById('add-note-btn');
-const countEl = document.getElementById('count');
 const deleteAllBtn = document.getElementById('delete-all-btn');
 
 // --- helpers --------------------------------------------------------------
@@ -184,7 +183,6 @@ function render() {
   for (const task of tasks) {
     listEl.appendChild(renderItem(task));
   }
-  updateCount();
   updateDeleteAllButton();
 
   if (expandedId) {
@@ -299,11 +297,6 @@ function renderItem(task) {
   li.addEventListener('dragend', onDragEnd);
 
   return li;
-}
-
-function updateCount() {
-  const remaining = tasks.reduce((n, t) => n + (t.completed ? 0 : 1), 0);
-  countEl.textContent = `${remaining} remaining`;
 }
 
 function updateDeleteAllButton() {

@@ -8,7 +8,10 @@
 </head>
 <body>
   <main>
-    <h1>Tasks</h1>
+    <header class="app-header">
+      <h1>Tasks</h1>
+      <button type="button" id="delete-all-btn">Delete all</button>
+    </header>
 
     <form id="new-task-form" autocomplete="off">
       <div class="input-row">
@@ -28,15 +31,11 @@
         placeholder="Optional details"
         rows="2"
         aria-label="New task description"
+        hidden
       ></textarea>
     </form>
 
     <ul id="task-list" aria-live="polite"></ul>
-
-    <footer>
-      <span id="count">0 remaining</span>
-      <button type="button" id="delete-all-btn">Delete all</button>
-    </footer>
   </main>
 
   <script src="app.js"></script>
