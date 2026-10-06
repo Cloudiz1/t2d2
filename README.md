@@ -1,30 +1,68 @@
-# Tasks
+# t2d2
 
-A single-page todo list. Plain HTML/CSS/JS, no build step, no backend.
+A vim-feeling, SIMPLE Rust TUI todo list. Single binary, single keymap, one
+mode at a time.
 
-Tasks persist in `localStorage`. They stay on whichever browser profile you used.
+## Install
 
-## Hotkeys
+```
+cargo install --path .
+```
 
-Hotkeys are ignored while typing in an input or textarea.
+Or build from source:
+
+```
+cargo build --release
+./target/release/t2d2
+```
+
+## Storage
+
+Tasks live in `~/.local/share/ttd/tasks.json`. Created on first save. The
+parent directory is created automatically.
+
+## Keymap
+
+### Normal mode
 
 | Key | Action |
-| --- | --- |
-| `n` | Focus the new-task input |
-| `c` | Toggle complete on the hovered (or selected) task |
-| `d` | Delete the hovered (or selected) task |
-| `Ctrl/Cmd+Z` | Undo the last delete (in-memory; cleared when you close the tab) |
+|---|---|
+| `j` / `k` | move cursor |
+| `gg` / `G` | first / last task |
+| `o` / `O` | new task below / above |
+| `a` / `i` | edit title (append / insert) |
+| `A` | edit note |
+| `c` | toggle complete |
+| `d` | delete |
+| `D` | delete all (with `y/n` confirm) |
+| `J` / `K` | move task down / up |
+| `u` | undo delete |
+| `?` | help |
+| `Ctrl+Q` | quit |
 
-## Deploy to Netlify (free, static tier)
+### Insert mode (title or note)
 
-Easiest path: open https://app.netlify.com/drop and drop this folder onto the page. Netlify gives you a URL immediately. No account required for a first deploy; if you skip account creation, the URL is anonymous and ephemeral — create a free account to keep it.
+| Key | Action |
+|---|---|
+| printable | insert |
+| `Backspace` | delete char before cursor |
+| `Left` / `Right` | move cursor |
+| `Up` / `Down` | move between note lines (note only) |
+| `Tab` | title → note (title only) |
+| `Enter` | commit title; newline in note |
+| `Esc` | commit and return to normal |
+| `Ctrl+U` | kill to line start |
+| `Ctrl+W` | kill word before cursor |
 
-`netlify.toml` declares `publish = "."` so you can also connect a GitHub repo at https://app.netlify.com and get auto-deploys on push.
+Any other key is ignored in insert mode.
 
-## Local development
+## Undo
 
-Open `index.html` in a browser. Nothing to install.
+Single-stack, session-only. Deleting a task pushes it onto the undo stack;
+`u` restores it. The stack is unbounded across a single session and is
+cleared when you quit.
 
-## Browser caveat
+## Quit
 
-Tasks live in `localStorage`. They are scoped to one browser profile on one device. Clearing site data, switching browsers, or using a private window will show an empty list. The undo stack lives only in memory and is lost when the tab closes — it is only meant to recover from an accidental `d` press within the same session.
+`Ctrl+Q` flushes any pending save synchronously. Saves also happen
+automatically 150ms after any mutation.
