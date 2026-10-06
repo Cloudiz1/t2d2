@@ -130,6 +130,15 @@ function toggleComplete(id) {
   const task = tasks.find(t => t.id === id);
   if (!task) return;
   task.completed = !task.completed;
+  if (task.completed) {
+    const idx = tasks.indexOf(task);
+    tasks.splice(idx, 1);
+    let insertAt = tasks.length;
+    for (let i = tasks.length - 1; i >= 0; i--) {
+      if (tasks[i].completed) { insertAt = i + 1; break; }
+    }
+    tasks.splice(insertAt, 0, task);
+  }
   render();
   scheduleSave();
 }
@@ -226,35 +235,32 @@ function renderItem(task) {
   });
   content.appendChild(titleEl);
 
-  if (task.description) {
-    if (expandedId === task.id) {
-      const ta = document.createElement('textarea');
-      ta.className = 'description-edit';
-      ta.draggable = false;
-      ta.value = task.description;
-      ta.rows = clampRows(task.description);
-      ta.addEventListener('blur', () => commitDescriptionEdit(task.id, ta));
-      ta.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          ta.value = task.description;
-          ta.blur();
-        }
-      });
-      content.appendChild(ta);
-    } else {
-      const preview = document.createElement('span');
-      preview.className = 'description-preview';
-      preview.draggable = false;
-      preview.title = task.description;
-      preview.textContent = task.description;
-      preview.addEventListener('click', (e) => {
-        e.stopPropagation();
-        expandedId = task.id;
-        render();
-      });
-      content.appendChild(preview);
-    }
+  if (expandedId === task.id) {
+    const ta = document.createElement('textarea');
+    ta.className = 'description-edit';
+    ta.draggable = false;
+    ta.value = task.description;
+    ta.rows = clampRows(task.description);
+    ta.addEventListener('blur', () => commitDescriptionEdit(task.id, ta));
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        ta.blur();
+      }
+    });
+    content.appendChild(ta);
+  } else if (task.description) {
+    const preview = document.createElement('span');
+    preview.className = 'description-preview';
+    preview.draggable = false;
+    preview.title = task.description;
+    preview.textContent = task.description;
+    preview.addEventListener('click', (e) => {
+      e.stopPropagation();
+      expandedId = task.id;
+      render();
+    });
+    content.appendChild(preview);
   }
 
   li.appendChild(content);
@@ -305,13 +311,17 @@ function updateDeleteAllButton() {
 
 // --- inline title edit ----------------------------------------------------
 
-function startEditTitle(id, el) {
+function startEditTitle(id, el, append) {
   const task = tasks.find(t => t.id === id);
   if (!task) return;
   editingTitleId = id;
   el.contentEditable = 'true';
   el.focus();
-  selectAllText(el);
+  if (append) {
+    placeCaretAtEnd(el);
+  } else {
+    selectAllText(el);
+  }
 
   const onInput = () => {
     const t = tasks.find(x => x.id === id);
@@ -359,6 +369,15 @@ function selectAllText(el) {
   sel.addRange(range);
 }
 
+function placeCaretAtEnd(el) {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
 function commitDescriptionEdit(id, ta) {
   const task = tasks.find(t => t.id === id);
   if (!task) return;
@@ -375,6 +394,36 @@ btnAddNote.addEventListener('click', () => {
   inputDesc.focus();
 });
 
+function submitFromHotkey() {
+  const title = inputTitle.value.trim();
+  if (!title) return;
+  const description = inputDesc.value.trim();
+  addTask(title, description);
+  inputTitle.value = '';
+  inputDesc.value = '';
+  inputDesc.hidden = true;
+}
+
+inputTitle.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    submitFromHotkey();
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    inputDesc.hidden = false;
+    inputDesc.focus();
+  }
+});
+
+inputDesc.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    submitFromHotkey();
+  }
+});
+
 inputDesc.addEventListener('blur', () => {
   if (!inputDesc.value) inputDesc.hidden = true;
 });
@@ -382,16 +431,12 @@ inputDesc.addEventListener('blur', () => {
 formEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const title = inputTitle.value.trim();
-  if (!title) {
-    inputTitle.focus();
-    return;
-  }
+  if (!title) return;
   const description = inputDesc.value.trim();
   addTask(title, description);
   inputTitle.value = '';
   inputDesc.value = '';
   inputDesc.hidden = true;
-  inputTitle.focus();
 });
 
 // --- delete-all with confirm ----------------------------------------------
@@ -443,12 +488,29 @@ document.addEventListener('keydown', (e) => {
   if (cmd || e.altKey) return;
 
   switch (e.key) {
-    case 'n':
-    case 'N':
+    case ':':
       e.preventDefault();
       inputTitle.focus();
       inputTitle.select();
       break;
+    case 'a': {
+      e.preventDefault();
+      const id = getActiveId();
+      if (!id) break;
+      const li = listEl.querySelector(`[data-id="${id}"]`);
+      const titleEl = li && li.querySelector('.title');
+      if (titleEl) startEditTitle(id, titleEl, true);
+      break;
+    }
+    case 'A': {
+      e.preventDefault();
+      const id = getActiveId();
+      if (id) {
+        expandedId = id;
+        render();
+      }
+      break;
+    }
     case 'c':
     case 'C': {
       const id = getActiveId();
@@ -545,4 +607,3 @@ function clearDropIndicators() {
 
 load();
 render();
-inputTitle.focus();

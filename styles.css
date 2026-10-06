@@ -288,6 +288,11 @@ h1 {
   border-color: var(--accent);
   color: var(--accent-fg);
 }
+#delete-all-btn.armed:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
 #delete-all-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
