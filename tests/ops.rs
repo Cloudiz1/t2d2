@@ -157,12 +157,15 @@ fn toggle_complete_to_false_does_not_move_task() {
 }
 
 #[test]
-fn toggle_complete_follows_cursor_with_task() {
+fn toggle_complete_to_true_keeps_cursor_in_place() {
     let mut s = store_with(vec![task(1, "a", false), task(2, "b", false)], 0, 3);
     ops::toggle_complete(&mut s);
-    // "a" sinks. Cursor should follow it.
-    assert_eq!(s.cursor, 1);
-    assert_eq!(s.tasks[s.cursor].title, "a");
+    // "a" sinks to the bottom of the completed section (end of list).
+    // Cursor stays where it was (index 0), now pointing at "b".
+    assert_eq!(s.cursor, 0);
+    assert_eq!(s.tasks[s.cursor].title, "b");
+    assert_eq!(s.tasks[1].title, "a");
+    assert!(s.tasks[1].completed);
 }
 
 // ---------- move_down / move_up ----------

@@ -80,7 +80,7 @@ pub fn toggle_complete(store: &mut Store) {
             }
         }
         store.tasks.insert(insert_at, task);
-        store.cursor = insert_at;
+        // Cursor stays in place on the list — does NOT follow the task.
     }
     // Toggling to incomplete: leave position alone.
 }
