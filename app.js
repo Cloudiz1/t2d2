@@ -404,15 +404,13 @@ function submitFromHotkey() {
   inputTitle.value = '';
   inputDesc.value = '';
   inputDesc.hidden = true;
+  if (document.activeElement && isTypingTarget(document.activeElement)) {
+    document.activeElement.blur();
+  }
 }
 
 inputTitle.addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-    e.preventDefault();
-    submitFromHotkey();
-    return;
-  }
-  if (e.key === 'Enter') {
+  if (e.shiftKey && e.key === 'Enter') {
     e.preventDefault();
     inputDesc.hidden = false;
     inputDesc.focus();
@@ -420,7 +418,7 @@ inputTitle.addEventListener('keydown', (e) => {
 });
 
 inputDesc.addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+  if (!e.shiftKey && e.key === 'Enter') {
     e.preventDefault();
     submitFromHotkey();
   }
@@ -439,6 +437,9 @@ formEl.addEventListener('submit', (e) => {
   inputTitle.value = '';
   inputDesc.value = '';
   inputDesc.hidden = true;
+  if (document.activeElement && isTypingTarget(document.activeElement)) {
+    document.activeElement.blur();
+  }
 });
 
 // --- delete-all with confirm ----------------------------------------------
