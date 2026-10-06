@@ -30,6 +30,60 @@ pub fn render(frame: &mut Frame, store: &Store, mode: &Mode, status_hint: &str) 
     render_header(frame, chunks[0]);
     render_list(frame, chunks[1], store, mode);
     render_statusline(frame, chunks[2], store, mode, status_hint);
+    place_cursor(frame, chunks[1], store, mode);
+}
+
+/// Place the terminal caret at the cursor position when in insert mode.
+fn place_cursor(frame: &mut Frame, list_area: Rect, store: &Store, mode: &Mode) {
+    let Mode::Insert { field } = mode else { return };
+
+    // Find the visual row of the current task, accounting for any rows above it.
+    let editing_id = match field {
+        EditField::Title { task_id, .. } => *task_id,
+        EditField::Note { task_id, .. } => *task_id,
+    };
+
+    let Some(cursor_pos) = store.tasks.iter().position(|t| t.id == editing_id) else {
+        return;
+    };
+
+    // Compute the visual-row offset: 1 for the title row, plus 1 if a note row
+    // exists or the note is being edited.
+    let mut visual_row_offset: u16 = 0;
+    for (i, task) in store.tasks.iter().enumerate() {
+        if i == cursor_pos {
+            break;
+        }
+        visual_row_offset += 1;
+        if !task.note.is_empty() {
+            visual_row_offset += 1;
+        }
+    }
+
+    let visual_col_in_list: u16 = match field {
+        EditField::Title { cursor, .. } => {
+            // Title row: "> {title}". Cursor sits at the character position
+            // after "> ".
+            2 + *cursor as u16
+        }
+        EditField::Note {
+            cursor_row,
+            cursor_col,
+            ..
+        } => {
+            // The title row is one, then note rows start.
+            visual_row_offset += 1;
+            visual_row_offset += *cursor_row as u16;
+            // Note row prefix is "  - ".
+            4 + *cursor_col as u16
+        }
+    };
+
+    let y = list_area.y + visual_row_offset;
+    let x = list_area.x + visual_col_in_list;
+    if y < list_area.y + list_area.height {
+        frame.set_cursor_position(ratatui::layout::Position { x, y });
+    }
 }
 
 fn render_header(frame: &mut Frame, area: Rect) {
@@ -95,15 +149,36 @@ fn build_rows(store: &Store, mode: &Mode) -> Vec<(String, bool, bool)> {
         _ => None,
     };
 
+    // The buffer + cursor for the task being edited in title-mode, if any.
+    let editing_title: Option<(u64, &str, usize)> = match mode {
+        Mode::Insert {
+            field: EditField::Title {
+                task_id,
+                buffer,
+                cursor,
+            },
+        } => Some((*task_id, buffer.as_str(), *cursor)),
+        _ => None,
+    };
+
     for (i, task) in store.tasks.iter().enumerate() {
         let is_cursor = i == store.cursor;
 
         // Title row.
         let marker = if is_cursor { '>' } else { ' ' };
-        let title = if task.title.is_empty() {
-            " ".to_string()
+        let title_text = if let Some((id, buf, _)) = editing_title {
+            if id == task.id {
+                buf.to_string()
+            } else {
+                task.title.clone()
+            }
         } else {
             task.title.clone()
+        };
+        let title = if title_text.is_empty() {
+            " ".to_string()
+        } else {
+            title_text
         };
         out.push((format!("{marker} {title}"), is_cursor, task.completed));
 
