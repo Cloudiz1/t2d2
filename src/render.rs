@@ -11,11 +11,18 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Paragraph, Wrap};
 use ratatui::Frame;
 
-use crate::state::{EditField, Mode, Store, Task};
+use crate::state::{EditField, Mode, PromptKind, Store, Task};
+use crate::ui::prompt;
 
 const GREY: Color = Color::DarkGray;
 
-pub fn render(frame: &mut Frame, store: &Store, mode: &Mode, status_hint: &str) {
+pub fn render(
+    frame: &mut Frame,
+    store: &Store,
+    mode: &Mode,
+    prompt: Option<PromptKind>,
+    status_hint: &str,
+) {
     let area = frame.area();
 
     let chunks = Layout::default()
@@ -29,7 +36,11 @@ pub fn render(frame: &mut Frame, store: &Store, mode: &Mode, status_hint: &str) 
 
     render_header(frame, chunks[0]);
     render_list(frame, chunks[1], store, mode);
-    render_statusline(frame, chunks[2], store, mode, status_hint);
+    if prompt.is_some() {
+        prompt::render(frame, chunks[2]);
+    } else {
+        render_statusline(frame, chunks[2], store, mode, status_hint);
+    }
     place_cursor(frame, chunks[1], store, mode);
 }
 

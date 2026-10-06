@@ -55,7 +55,7 @@ fn run(terminal: &mut Tui, app: &mut App) -> io::Result<()> {
         // Render first so the user sees something even if events block.
         terminal.draw(|f| {
             // Help overlay goes on top of everything.
-            render::render(f, &app.store, &app.mode, status_hint(app));
+            render::render(f, &app.store, &app.mode, app.prompt, status_hint(app));
             if app.help_open {
                 help::render(f);
             }
