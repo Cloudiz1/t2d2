@@ -17,6 +17,7 @@ let draggingId = null;
 let saveTimer = null;
 let deleteAllArmed = false;
 let deleteAllTimer = null;
+let helpOpen = false;
 
 // --- dom refs -------------------------------------------------------------
 
@@ -26,6 +27,7 @@ const inputTitle = document.getElementById('new-title');
 const inputDesc = document.getElementById('new-description');
 const btnAddNote = document.getElementById('add-note-btn');
 const deleteAllBtn = document.getElementById('delete-all-btn');
+const helpPanel = document.getElementById('help-panel');
 
 // --- helpers --------------------------------------------------------------
 
@@ -463,6 +465,13 @@ deleteAllBtn.addEventListener('click', () => {
   }
 });
 
+// --- help toggle ----------------------------------------------------------
+
+function setHelpOpen(open) {
+  helpOpen = open;
+  document.body.classList.toggle('help-shown', open);
+}
+
 // --- hotkeys --------------------------------------------------------------
 
 document.addEventListener('keydown', (e) => {
@@ -475,9 +484,15 @@ document.addEventListener('keydown', (e) => {
     }
   }
 
-  if (isTypingTarget(e.target)) return;
-
   const cmd = e.metaKey || e.ctrlKey;
+
+  if (cmd && e.key === '/') {
+    e.preventDefault();
+    setHelpOpen(!helpOpen);
+    return;
+  }
+
+  if (isTypingTarget(e.target)) return;
 
   if (cmd && (e.key === 'z' || e.key === 'Z')) {
     e.preventDefault();
