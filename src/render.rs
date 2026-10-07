@@ -232,7 +232,7 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
                 for line in buffer {
                     out.push(Line::from(vec![
                         Span::styled("  ".to_string(), Style::default()),
-                        Span::styled("- ".to_string(), Style::default()),
+                        Span::styled("- ".to_string(), body),
                         Span::styled(line.clone(), body),
                     ]));
                 }
@@ -241,7 +241,7 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
             let preview = note_preview(&task.note);
             out.push(Line::from(vec![
                 Span::styled("  ".to_string(), Style::default()),
-                Span::styled("- ".to_string(), Style::default()),
+                Span::styled("- ".to_string(), body),
                 Span::styled(preview, body),
             ]));
         }
