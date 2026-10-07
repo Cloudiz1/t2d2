@@ -141,6 +141,17 @@ fn render_list(frame: &mut Frame, area: Rect, store: &Store, mode: &Mode) {
 /// Build the rendered lines for the list. Each line is a sequence of spans:
 /// the cursor marker (if any), then the title or note content. The cursor
 /// marker is never struck through, even when the task is completed.
+fn note_preview(note: &str) -> String {
+    let mut lines = note.split('\n');
+    let first = lines.next().unwrap_or("");
+    let has_more = lines.next().is_some();
+    if has_more {
+        format!("{first}…")
+    } else {
+        first.to_string()
+    }
+}
+
 fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
     let mut out = Vec::new();
 
@@ -174,6 +185,11 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
         let is_cursor = i == store.cursor;
         let marker: String = if is_cursor { "> ".to_string() } else { "  ".to_string() };
         let body = body_style_for(task.completed);
+        let title_style = if is_cursor {
+            body.add_modifier(Modifier::BOLD)
+        } else {
+            body
+        };
 
         // Title row.
         let title_text = if let Some((id, buf)) = &editing_title {
@@ -192,7 +208,7 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
         };
         out.push(Line::from(vec![
             Span::styled(marker, Style::default()),
-            Span::styled(title, body),
+            Span::styled(title, title_style),
         ]));
 
         // Note row(s).
@@ -210,11 +226,11 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
                 }
             }
         } else if !task.note.is_empty() {
-            let preview = task.note.lines().next().unwrap_or("");
+            let preview = note_preview(&task.note);
             out.push(Line::from(vec![
                 Span::styled("  ".to_string(), Style::default()),
                 Span::styled("- ".to_string(), Style::default()),
-                Span::styled(preview.to_string(), body),
+                Span::styled(preview, body),
             ]));
         }
     }
