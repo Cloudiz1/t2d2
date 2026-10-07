@@ -31,7 +31,7 @@ parent directory is created automatically.
 | `gg` / `G` | first / last task |
 | `o` / `O` | new task below / above |
 | `a` / `i` | edit title (append / insert) |
-| `A` | edit note |
+| `Tab` | edit note |
 | `c` | toggle complete |
 | `d` | delete |
 | `D` | delete all (with `y/n` confirm) |

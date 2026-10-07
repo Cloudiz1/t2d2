@@ -54,11 +54,23 @@ fn normal_o_and_capital_o() {
 }
 
 #[test]
-fn normal_a_i_A() {
+fn normal_a_i() {
     let m = Mode::Normal;
     assert!(matches!(map_key(&m, None, char('a')), Action::EditTitleAppend));
     assert!(matches!(map_key(&m, None, char('i')), Action::EditTitleInsert));
-    assert!(matches!(map_key(&m, None, char('A')), Action::EditNote));
+}
+
+#[test]
+fn normal_tab_opens_note() {
+    let m = Mode::Normal;
+    assert!(matches!(map_key(&m, None, key(KeyCode::Tab)), Action::EditNote));
+}
+
+#[test]
+fn normal_capital_a_is_noop() {
+    // A was the old "open note" key; now Tab does that. A is unbound.
+    let m = Mode::Normal;
+    assert!(matches!(map_key(&m, None, char('A')), Action::Noop));
 }
 
 #[test]

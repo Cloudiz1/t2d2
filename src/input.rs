@@ -82,7 +82,7 @@ fn normal(key: KeyEvent) -> Action {
         KeyCode::Char('O') => Action::NewAbove,
         KeyCode::Char('a') => Action::EditTitleAppend,
         KeyCode::Char('i') => Action::EditTitleInsert,
-        KeyCode::Char('A') => Action::EditNote,
+        KeyCode::Tab => Action::EditNote,
         KeyCode::Char('c') => Action::ToggleComplete,
         KeyCode::Char('d') => Action::Delete,
         KeyCode::Char('D') => Action::DeleteAllPrompt,
