@@ -181,15 +181,27 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
         }
     };
 
+    let title_style_for = |completed: bool, is_cursor: bool| -> Style {
+        match (completed, is_cursor) {
+            (false, false) => Style::default(),
+            (false, true) => Style::default()
+                .fg(Color::LightBlue)
+                .add_modifier(Modifier::BOLD),
+            (true, false) => Style::default()
+                .fg(GREY)
+                .add_modifier(Modifier::CROSSED_OUT),
+            (true, true) => Style::default()
+                .fg(GREY)
+                .add_modifier(Modifier::CROSSED_OUT)
+                .add_modifier(Modifier::BOLD),
+        }
+    };
+
     for (i, task) in store.tasks.iter().enumerate() {
         let is_cursor = i == store.cursor;
         let marker: String = if is_cursor { "> ".to_string() } else { "  ".to_string() };
         let body = body_style_for(task.completed);
-        let title_style = if is_cursor {
-            body.add_modifier(Modifier::BOLD)
-        } else {
-            body
-        };
+        let title_style = title_style_for(task.completed, is_cursor);
 
         // Title row.
         let title_text = if let Some((id, buf)) = &editing_title {
