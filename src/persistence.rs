@@ -1,4 +1,4 @@
-//! Load and save the store to `~/.local/share/ttd/tasks.json`.
+//! Load and save the store to `~/.local/share/t2d2/tasks.json`.
 //!
 //! The public API uses the standard XDG location. Internally, the work goes
 //! through `load_from` / `save_to` which take an explicit path — that seam
@@ -23,7 +23,7 @@ struct Persisted {
 /// The default storage location, per XDG.
 pub fn storage_path() -> PathBuf {
     let base = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("."));
-    base.join("ttd").join("tasks.json")
+    base.join("t2d2").join("tasks.json")
 }
 
 pub fn load() -> io::Result<Store> {
