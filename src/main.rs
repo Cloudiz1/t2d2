@@ -98,8 +98,10 @@ fn run(terminal: &mut Tui, app: &mut App) -> io::Result<()> {
 }
 
 fn status_hint(app: &App) -> &'static str {
-    if app.prompt.is_some() {
-        return "";
+    if let Some(p) = app.prompt {
+        return match p {
+            t2d2::PromptKind::DeleteAll => " delete all? (y/n) ",
+        };
     }
     match app.mode {
         t2d2::Mode::Normal => "j/k h/l  o new  c done  d del  ? help",

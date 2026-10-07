@@ -12,7 +12,6 @@ use ratatui::widgets::{Block, Borders, Padding, Paragraph, Wrap};
 use ratatui::Frame;
 
 use crate::state::{EditField, Mode, PromptKind, Store, Task};
-use crate::ui::prompt;
 
 const GREY: Color = Color::DarkGray;
 
@@ -46,12 +45,7 @@ pub fn render(
     frame.render_widget(block, block_area);
 
     render_list(frame, inner, store, mode);
-
-    if prompt.is_some() {
-        prompt::render(frame, status_area);
-    } else {
-        render_statusline(frame, status_area, store, mode, status_hint);
-    }
+    render_statusline(frame, status_area, store, mode, prompt, status_hint);
 
     place_cursor(frame, inner, store, mode);
 }
@@ -228,21 +222,52 @@ fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
     out
 }
 
-fn render_statusline(frame: &mut Frame, area: Rect, store: &Store, mode: &Mode, hint: &str) {
+fn mode_label_style(mode: &Mode) -> Style {
+    let bg = match mode {
+        Mode::Normal => Color::LightGreen,
+        Mode::Insert { .. } => Color::LightBlue,
+    };
+    Style::default().bg(bg).fg(Color::Black)
+}
+
+fn mode_label(mode: &Mode) -> &'static str {
+    match mode {
+        Mode::Normal => " NORMAL ",
+        Mode::Insert { .. } => " INSERT ",
+    }
+}
+
+fn prompt_label_style() -> Style {
+    Style::default().bg(Color::Yellow).fg(Color::Black)
+}
+
+fn prompt_label(p: PromptKind) -> &'static str {
+    match p {
+        PromptKind::DeleteAll => " DELETE ",
+    }
+}
+
+fn render_statusline(
+    frame: &mut Frame,
+    area: Rect,
+    store: &Store,
+    mode: &Mode,
+    prompt: Option<PromptKind>,
+    hint: &str,
+) {
     let completed = store.tasks.iter().filter(|t| t.completed).count();
     let total = store.tasks.len();
     let count = format!("{total} tasks ({completed} done)");
-    let mode_str = match mode {
-        Mode::Normal => "-- NORMAL --",
-        Mode::Insert {
-            field: EditField::Title { .. },
-        } => "-- INSERT (title) --",
-        Mode::Insert {
-            field: EditField::Note { .. },
-        } => "-- INSERT (note) --",
+    let pill_text = match prompt {
+        Some(p) => prompt_label(p),
+        None => mode_label(mode),
+    };
+    let pill_style = match prompt {
+        Some(_) => prompt_label_style(),
+        None => mode_label_style(mode),
     };
     let line = Line::from(vec![
-        Span::raw(mode_str),
+        Span::styled(pill_text, pill_style),
         Span::raw(" "),
         Span::raw(count),
         Span::raw(" "),
