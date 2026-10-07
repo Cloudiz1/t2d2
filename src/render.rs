@@ -120,7 +120,10 @@ fn render_list(frame: &mut Frame, area: Rect, store: &Store, mode: &Mode) {
 
     // Compute total visible rows so we can scroll.
     let rows = build_rows(store, mode);
-    let cursor_row = rows.iter().position(|(_, is_cursor, _)| *is_cursor).unwrap_or(0);
+    let cursor_row = rows
+        .iter()
+        .position(|line| line.spans.first().map(|s| s.content == "> ").unwrap_or(false))
+        .unwrap_or(0);
 
     let visible_height = area.height as usize;
     let scroll = if cursor_row >= visible_height {
@@ -129,57 +132,52 @@ fn render_list(frame: &mut Frame, area: Rect, store: &Store, mode: &Mode) {
         0
     };
 
-    let mut lines: Vec<Line> = Vec::new();
-    for (text, is_cursor, is_completed) in rows.iter().skip(scroll).take(visible_height) {
-        let mut style = Style::default();
-        if *is_completed {
-            style = style
-                .fg(GREY)
-                .add_modifier(Modifier::CROSSED_OUT);
-        }
-        if *is_cursor {
-            style = style.add_modifier(Modifier::REVERSED);
-        }
-        lines.push(Line::from(Span::styled(text.clone(), style)));
-    }
-
+    let lines: Vec<Line> = rows.into_iter().skip(scroll).take(visible_height).collect();
     let paragraph = Paragraph::new(lines);
     frame.render_widget(paragraph, area);
 }
 
-/// Build the (text, is_cursor, is_completed) tuples that the list renders.
-/// One tuple per visual row.
-fn build_rows(store: &Store, mode: &Mode) -> Vec<(String, bool, bool)> {
+/// Build the rendered lines for the list. Each line is a sequence of spans:
+/// the cursor marker (if any), then the title or note content. The cursor
+/// marker is never struck through, even when the task is completed.
+fn build_rows<'a>(store: &'a Store, mode: &'a Mode) -> Vec<Line<'a>> {
     let mut out = Vec::new();
 
     // The task currently being edited in note-mode, if any.
-    let editing_note_id = match mode {
+    let editing_note_id: Option<u64> = match mode {
         Mode::Insert {
             field: EditField::Note { task_id, .. },
         } => Some(*task_id),
         _ => None,
     };
 
-    // The buffer + cursor for the task being edited in title-mode, if any.
-    let editing_title: Option<(u64, &str, usize)> = match mode {
+    // The buffer for the task being edited in title-mode, if any.
+    let editing_title: Option<(u64, String)> = match mode {
         Mode::Insert {
             field: EditField::Title {
-                task_id,
-                buffer,
-                cursor,
+                task_id, buffer, ..
             },
-        } => Some((*task_id, buffer.as_str(), *cursor)),
+        } => Some((*task_id, buffer.clone())),
         _ => None,
+    };
+
+    let body_style_for = |completed: bool| -> Style {
+        if completed {
+            Style::default().fg(GREY).add_modifier(Modifier::CROSSED_OUT)
+        } else {
+            Style::default()
+        }
     };
 
     for (i, task) in store.tasks.iter().enumerate() {
         let is_cursor = i == store.cursor;
+        let marker: String = if is_cursor { "> ".to_string() } else { "  ".to_string() };
+        let body = body_style_for(task.completed);
 
         // Title row.
-        let marker = if is_cursor { '>' } else { ' ' };
-        let title_text = if let Some((id, buf, _)) = editing_title {
-            if id == task.id {
-                buf.to_string()
+        let title_text = if let Some((id, buf)) = &editing_title {
+            if *id == task.id {
+                buf.clone()
             } else {
                 task.title.clone()
             }
@@ -191,22 +189,32 @@ fn build_rows(store: &Store, mode: &Mode) -> Vec<(String, bool, bool)> {
         } else {
             title_text
         };
-        out.push((format!("{marker} {title}"), is_cursor, task.completed));
+        out.push(Line::from(vec![
+            Span::styled(marker, Style::default()),
+            Span::styled(title, body),
+        ]));
 
         // Note row(s).
         if Some(task.id) == editing_note_id {
-            // Expand the note into the editor's rows.
             if let Mode::Insert {
                 field: EditField::Note { buffer, .. },
             } = mode
             {
                 for line in buffer {
-                    out.push((format!("  - {line}"), is_cursor, task.completed));
+                    out.push(Line::from(vec![
+                        Span::styled("  ".to_string(), Style::default()),
+                        Span::styled("- ".to_string(), Style::default()),
+                        Span::styled(line.clone(), body),
+                    ]));
                 }
             }
         } else if !task.note.is_empty() {
             let preview = task.note.lines().next().unwrap_or("");
-            out.push((format!("  - {preview}"), is_cursor, task.completed));
+            out.push(Line::from(vec![
+                Span::styled("  ".to_string(), Style::default()),
+                Span::styled("- ".to_string(), Style::default()),
+                Span::styled(preview.to_string(), body),
+            ]));
         }
     }
 
