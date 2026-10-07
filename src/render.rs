@@ -8,7 +8,7 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Paragraph, Wrap};
+use ratatui::widgets::{Block, Borders, Padding, Paragraph, Wrap};
 use ratatui::Frame;
 
 use crate::state::{EditField, Mode, PromptKind, Store, Task};
@@ -25,23 +25,35 @@ pub fn render(
 ) {
     let area = frame.area();
 
+    // Reserve the last row for the statusline (outside the bordered block).
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1), // header
-            Constraint::Min(1),    // list
-            Constraint::Length(1), // statusline
+            Constraint::Min(1),    // bordered block
+            Constraint::Length(1), // statusline (outside the border)
         ])
         .split(area);
 
-    render_header(frame, chunks[0]);
-    render_list(frame, chunks[1], store, mode);
+    let block_area = chunks[0];
+    let status_area = chunks[1];
+
+    // Bordered block with inner padding: 1 top/bottom, 2 left/right.
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("t2d2")
+        .padding(Padding::new(2, 2, 1, 1));
+    let inner = block.inner(block_area);
+    frame.render_widget(block, block_area);
+
+    render_list(frame, inner, store, mode);
+
     if prompt.is_some() {
-        prompt::render(frame, chunks[2]);
+        prompt::render(frame, status_area);
     } else {
-        render_statusline(frame, chunks[2], store, mode, status_hint);
+        render_statusline(frame, status_area, store, mode, status_hint);
     }
-    place_cursor(frame, chunks[1], store, mode);
+
+    place_cursor(frame, inner, store, mode);
 }
 
 /// Place the terminal caret at the cursor position when in insert mode.
@@ -95,11 +107,6 @@ fn place_cursor(frame: &mut Frame, list_area: Rect, store: &Store, mode: &Mode) 
     if y < list_area.y + list_area.height {
         frame.set_cursor_position(ratatui::layout::Position { x, y });
     }
-}
-
-fn render_header(frame: &mut Frame, area: Rect) {
-    let line = Line::from(Span::raw("t2d2"));
-    frame.render_widget(Paragraph::new(line), area);
 }
 
 fn render_list(frame: &mut Frame, area: Rect, store: &Store, mode: &Mode) {
