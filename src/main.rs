@@ -58,6 +58,9 @@ fn acquire_lock() -> io::Result<fs::File> {
     if f.try_lock_exclusive().is_err() {
         let existing_pid = fs::read_to_string(&lock_path).unwrap_or_default();
         eprintln!("t2d2: already running (pid {})", existing_pid.trim());
+        // Pause so the message is visible in launchers (e.g. `kitty -e t2d2`)
+        // that close the window the moment the child exits. Ctrl+C dismisses.
+        std::thread::sleep(Duration::from_secs(3));
         std::process::exit(1);
     }
     f.set_len(0)?;
