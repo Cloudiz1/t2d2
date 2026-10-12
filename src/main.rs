@@ -1,4 +1,5 @@
-use std::io::{self, Stdout};
+use std::fs;
+use std::io::{self, Write, Stdout};
 use std::time::{Duration, Instant};
 
 use crossterm::event::{self, Event};
@@ -6,6 +7,7 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
+use fs2::FileExt;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
@@ -20,6 +22,7 @@ const TICK: Duration = Duration::from_millis(100);
 type Tui = Terminal<CrosstermBackend<Stdout>>;
 
 fn main() -> io::Result<()> {
+    let _lock = acquire_lock()?;
     let mut terminal = setup_terminal()?;
     let store = persistence::load().unwrap_or_else(|e| {
         eprintln!("t2d2: failed to load store: {e}");
@@ -31,6 +34,35 @@ fn main() -> io::Result<()> {
     // Final flush.
     let _ = persistence::save(&app.store);
     result
+}
+
+/// Take an exclusive lock on the per-user lock file. If another t2d2 is
+/// already running, print its pid to stderr and exit. The returned `File`
+/// must be kept alive for the lifetime of the process — the kernel
+/// releases the flock when this fd closes, so dropping it would let a
+/// second instance start. The kernel releases the lock automatically on
+/// process exit (clean or crash), so we never need to clean it up.
+fn acquire_lock() -> io::Result<fs::File> {
+    let lock_path = persistence::storage_path().with_file_name("lock");
+    if let Some(parent) = lock_path.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    let f = fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(&lock_path)?;
+    if f.try_lock_exclusive().is_err() {
+        let existing_pid = fs::read_to_string(&lock_path).unwrap_or_default();
+        eprintln!("t2d2: already running (pid {})", existing_pid.trim());
+        std::process::exit(1);
+    }
+    f.set_len(0)?;
+    writeln!(&f, "{}", std::process::id())?;
+    Ok(f)
 }
 
 fn setup_terminal() -> io::Result<Tui> {
